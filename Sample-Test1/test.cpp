@@ -28,5 +28,22 @@ TEST(TestCaseName, Read5Times) {
 	catch (readFailException e) {
 		cout << e.what() << endl;
 	}
+}
 
+TEST(TestCaseName, WriteTest) {
+	//arrange 
+	FlashMock mk;
+	DeviceDriver driver = DeviceDriver(&mk);
+
+	EXPECT_CALL(mk, read)
+		.Times(AtLeast(5))	                      // Behavior Verification
+		.WillRepeatedly(Return(0xFF));   // Stub
+
+	//act
+	try {
+		driver.write(10, 1);
+	}
+	catch (WriteFailException e) {
+		cout << e.what() << endl;
+	}
 }
