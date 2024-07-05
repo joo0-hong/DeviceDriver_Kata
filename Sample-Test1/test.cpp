@@ -14,14 +14,14 @@ public:
 
 class DDTestFixture : public testing::Test {
 public:
+	FlashMock mk;
+	DeviceDriver driver = DeviceDriver(&mk);
+
 	const int DEFAULT_ADDR = 0x10;
 	const int READ_TRY_COUNT = 5;
 };
 
 TEST_F(DDTestFixture, Read5Times) {
-	FlashMock mk;
-	DeviceDriver driver = DeviceDriver(&mk);
-
 	EXPECT_CALL(mk, read)
 		.Times(READ_TRY_COUNT);
 
@@ -29,9 +29,6 @@ TEST_F(DDTestFixture, Read5Times) {
 }
 
 TEST_F(DDTestFixture, ReadWithException) {
-	FlashMock mk;
-	DeviceDriver driver = DeviceDriver(&mk);
-
 	EXPECT_CALL(mk, read)
 		.WillOnce(Return(0x0))
 		.WillRepeatedly(Return(0xFF));
@@ -42,9 +39,6 @@ TEST_F(DDTestFixture, ReadWithException) {
 }
 
 TEST_F(DDTestFixture, WriteTest) {
-	FlashMock mk;
-	DeviceDriver driver = DeviceDriver(&mk);
-
 	EXPECT_CALL(mk, read)
 		.WillRepeatedly(Return(0xFA));
 
@@ -54,9 +48,6 @@ TEST_F(DDTestFixture, WriteTest) {
 }
 
 TEST_F(DDTestFixture, WriteAfterRead) {
-	FlashMock mk;
-	DeviceDriver driver = DeviceDriver(&mk);
-
 	EXPECT_CALL(mk, read)
 		.WillRepeatedly(Return(0xFF));
 
