@@ -12,38 +12,58 @@ public:
 	MOCK_METHOD(void, write, (long address, unsigned char data), (override));
 };
 
-TEST(TestCaseName, Read5Times) {
-	//arrange 
+class DDTestFixture : public testing::Test {
+public:
+	const int DEFAULT_ADDR = 0x10;
+	const int READ_TRY_COUNT = 5;
+};
+
+TEST_F(DDTestFixture, Read5Times) {
 	FlashMock mk;
 	DeviceDriver driver = DeviceDriver(&mk);
 
 	EXPECT_CALL(mk, read)
-		.Times(5)	                      // Behavior Verification
-		.WillRepeatedly(Return(10000));   // Stub
+		.Times(READ_TRY_COUNT);
 
-	//act
-	try {
-		driver.read(10);
-	}
-	catch (readFailException e) {
-		cout << e.what() << endl;
-	}
+	driver.read(DEFAULT_ADDR);
 }
 
-TEST(TestCaseName, WriteTest) {
-	//arrange 
+TEST_F(DDTestFixture, ReadWithException) {
 	FlashMock mk;
 	DeviceDriver driver = DeviceDriver(&mk);
 
 	EXPECT_CALL(mk, read)
-		.Times(AtLeast(5))	                      // Behavior Verification
-		.WillRepeatedly(Return(0xFF));   // Stub
+		.WillOnce(Return(0x0))
+		.WillRepeatedly(Return(0xFF));
 
-	//act
-	try {
-		driver.write(10, 1);
-	}
-	catch (WriteFailException e) {
-		cout << e.what() << endl;
-	}
+	EXPECT_THROW({
+		driver.read(DEFAULT_ADDR);
+		}, readFailException);
+}
+
+TEST_F(DDTestFixture, WriteTest) {
+	FlashMock mk;
+	DeviceDriver driver = DeviceDriver(&mk);
+
+	EXPECT_CALL(mk, read)
+		.WillRepeatedly(Return(0xFA));
+
+	EXPECT_THROW({
+		driver.write(DEFAULT_ADDR, 1);
+		}, WriteFailException);
+}
+
+TEST_F(DDTestFixture, WriteAfterRead) {
+	FlashMock mk;
+	DeviceDriver driver = DeviceDriver(&mk);
+
+	EXPECT_CALL(mk, read)
+		.WillRepeatedly(Return(0xFF));
+
+	driver.write(DEFAULT_ADDR, 1);
+
+	EXPECT_CALL(mk, read)
+		.WillRepeatedly(Return(0x1));
+
+	EXPECT_EQ(1, driver.read(DEFAULT_ADDR));
 }
